@@ -1,0 +1,12 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: {{ include "istio-workshop.fullname" . }}-oauth2
+spec:
+  action: CUSTOM
+  selector:
+    matchLabels: {{- include "common.labels.matchLabels" .Subcharts.nginx | nindent 6 }}
+  provider:
+    name: {{ .Values.authorization.oauth2.provider }}
+  rules:
+    - {}

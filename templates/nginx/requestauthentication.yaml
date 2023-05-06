@@ -1,0 +1,11 @@
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: {{ include "istio-workshop.fullname" . }}-nginx
+spec:
+  selector:
+    matchLabels: {{- include "common.labels.matchLabels" .Subcharts.nginx | nindent 6 }}
+  jwtRules:
+  - issuer: {{ index .Values "oauth2-proxy" "configuration" "oidcIssuerUrl" }}
+    jwksUri: {{ index .Values "oauth2-proxy" "configuration" "oidcIssuerUrl" }}/protocol/openid-connect/certs
+    forwardOriginalToken: true

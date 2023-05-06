@@ -1,0 +1,83 @@
+authorization:
+  oauth2:
+    provider: oauth2-proxy
+
+nginx:
+  # Custom istio configuration for a particular service
+  staticSiteConfigmap: istio-istio-workshop-service1
+  serviceAccount:
+    create: true
+  service:
+    type: ClusterIP
+  containerPorts:
+    https: 8443
+  ingress:
+    hostname: service1.localhost
+  podLabels:
+    version: v1
+
+ingress:
+  # Enable ingress examples
+  enabled: false
+  port: 8080
+  tlsPort: 8443
+  hosts:
+    nginx: service.localhost
+    keycloak: keycloak.localhost
+
+oauth2-proxy:
+  redis:
+    enabled: false
+  configuration:
+    oidcIssuerUrl: http://keycloak.localhost:8080/realms/test
+    clientID: test-client
+    clientSecret: topsecret
+    content: ""
+  extraArgs:
+    # When set to static response OAuth2 Proxy just sends 200 (or 403)
+    # HTTP response to any request instead of proxying to downstream.
+    - --upstream=static://200
+    - --provider=keycloak-oidc
+    - --reverse-proxy=true
+    - --force-https=false
+    - --set-authorization-header=true
+    - --cookie-secure=false
+    - --cookie-samesite=lax
+    - --cookie-refresh=3m
+    - --cookie-expire=1h
+    - --email-domain=*
+    - --skip-provider-button=true
+    - --whitelist-domain=keycloak.localhost
+    - --skip-jwt-bearer-tokens=true
+
+keycloak:
+  auth:
+    adminUser: admin
+    adminPassword: admin
+    managementPassword: admin
+  service:
+    type: ClusterIP
+  realmConfigPath: "config/realm-config.json"
+  extraEnvVars:
+    - name: KEYCLOAK_EXTRA_ARGS
+      value: "-Dkeycloak.migration.action=import -Dkeycloak.migration.provider=singleFile -Dkeycloak.migration.file=/config/realm-config.json -Dkeycloak.migration.strategy=OVERWRITE_EXISTING"
+  extraVolumeMounts:
+    - name: keycloak-config
+      mountPath: "/config"
+      readOnly: true
+  extraVolumes:
+    - name: keycloak-config
+      configMap:
+        name: istio-istio-workshop-keycloak
+  proxyAddressForwarding: true
+  users:
+  - name: test
+    password: 123456
+    email: test@test.com
+  proxy: none
+  postgresql:
+    global:
+      postgresql:
+        auth:
+          password: keycloak
+          postgresPassword: keycloak-admin

@@ -1,0 +1,87 @@
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+spec:
+  components:
+    base:
+      enabled: true
+    cni:
+      # Disable CNI to avoid problems with Docker Desktop - it is required for ambient mesh
+      enabled: false
+    egressGateways:
+    - enabled: false
+    ingressGateways:
+    - enabled: true
+      name: istio-ingressgateway
+      k8s:
+        service:
+          ports:
+          - name: status-port
+            port: 15021
+            protocol: TCP
+            targetPort: 15021
+          - name: local-https
+            port: 8443
+            protocol: TCP
+            targetPort: 8443
+          - name: local-http
+            protocol: TCP
+            port: 8080
+            targetPort: 8080
+    istiodRemote:
+      enabled: false
+    pilot:
+      enabled: true
+
+  meshConfig:
+    #  proxyMetadata: {}
+    #  gatewayTopology:
+    #    numTrustedProxies: 1
+    enableTracing: true
+    enablePrometheusMerge: true
+    extensionProviders:
+    # Adding custom authentication provider which passes all request to OAuth2 Proxz first
+    # Alternatively proxy.istio.io/config annotation can be used to setup the behavior for particular proxy only
+    - name: "oauth2-proxy"
+      envoyExtAuthzHttp:
+        service: "istio-oauth2-proxy.workshop.svc.cluster.local"
+        port: 80
+        headersToDownstreamOnDeny:
+          - content-type
+          - set-cookie
+        headersToUpstreamOnAllow:
+          - authorization
+          - cookie
+          - path
+          - x-auth-request-access-token
+          - x-forwarded-access-token
+        includeRequestHeadersInCheck:
+          - cookie
+          - x-forwarded-access-token
+          - x-forwarded-proto
+          - x-forwarded-for
+  profile: default
+  # Enable ambient mesh
+  #profile: ambient
+
+  values:
+    # Override default sidecar resources
+    global:
+      proxy:
+        resources:
+          requests:
+            cpu: 80m
+            memory: 50Mi
+      proxy_init:
+        resources:
+          requests:
+            cpu: 80m
+            memory: 50Mi
+
+    pilot:
+      autoscaleEnabled: false
+
+    gateways:
+      istio-egressgateway:
+        autoscaleEnabled: false
+      istio-ingressgateway:
+        autoscaleEnabled: false

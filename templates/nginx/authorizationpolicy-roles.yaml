@@ -1,0 +1,16 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: "{{ include "istio-workshop.fullname" . }}-roles"
+spec:
+  selector:
+    matchLabels: {{- include "common.labels.matchLabels" .Subcharts.nginx | nindent 6 }}
+  action: ALLOW
+  rules:
+  - to:
+    - operation:
+        methods: ["GET"]
+        paths: ["/"]
+    when:
+    - key: request.auth.claims[resource_access][test-client][roles]
+      values: ["test-role"]

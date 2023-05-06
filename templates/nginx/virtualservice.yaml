@@ -1,0 +1,26 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ include "istio-workshop.fullname" . }}-nginx
+spec:
+  gateways:
+  - {{ include "istio-workshop.fullname" . }}-nginx
+  hosts:
+  - {{ .Values.ingress.hosts.nginx }}
+  http:
+  - match:
+    - port: {{ .Values.ingress.port }}
+      uri:
+        prefix: /oauth2/
+    route:
+    - destination:
+        host: {{ printf "%s.%s.svc.cluster.local" (include "common.names.fullname" (index .Subcharts "oauth2-proxy")) .Release.Namespace }}
+        port:
+          number: {{ index .Values "oauth2-proxy" "service" "port" }}
+  - match:
+    - port: {{ .Values.ingress.port }}
+    route:
+    - destination:
+        host: {{ include "common.names.fullname" .Subcharts.nginx }}.{{ .Release.Namespace }}.svc.cluster.local
+        port:
+          number: {{ .Values.nginx.service.ports.http }}

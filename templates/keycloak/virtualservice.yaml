@@ -1,0 +1,17 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ include "istio-workshop.fullname" . }}-keycloak
+spec:
+  gateways:
+  - {{ include "istio-workshop.fullname" . }}-keycloak
+  hosts:
+  - {{ .Values.ingress.hosts.keycloak }}
+  http:
+  - match:
+    - port: {{ .Values.ingress.port }}
+    route:
+    - destination:
+        host: "{{ include "common.names.fullname" .Subcharts.keycloak }}.{{ .Release.Namespace }}.svc.cluster.local"
+        port:
+          number: {{ .Values.keycloak.service.ports.http }}

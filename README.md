@@ -55,6 +55,7 @@ which enables OAuth2 Proxy on nginx workload.
 * [templates/nginx/authorizationpolicy-roles.yaml](templates/nginx/authorizationpolicy-roles.yaml) -
 AuthorizationPolicy which ensures that JWT token contains role `test-role`.
 * [templates/nginx/virtualservice.yaml](templates/nginx/virtualservice.yaml) - VirtualService with explicit routing to [OAuth2 Proxy endpoints](https://oauth2-proxy.github.io/oauth2-proxy/docs/features/endpoints) for direct requests to OAuth2 Proxy API.
+* [templates/config/realm-config.json](templates/config/realm-config.json) - Initial configuration of Keyacloak realm imported during startup.
 
 ## Requirements
 
